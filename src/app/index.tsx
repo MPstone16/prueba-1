@@ -1,98 +1,140 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+import { AppShell } from '@/components/app-shell';
+import { BentoCard } from '@/components/bento-card';
+import { Field, PrimaryButton, typography } from '@/components/form-controls';
+import { useApp } from '@/context/app-context';
 
 export default function HomeScreen() {
+  const { session, readings, draft, login, ready } = useApp();
+  const [employeeCode, setEmployeeCode] = useState('');
+  const [pin, setPin] = useState('');
+  const [loggingIn, setLoggingIn] = useState(false);
+  const pendingCount = readings.filter((reading) => reading.syncStatus === 'pending').length;
+  const sentCount = readings.filter((reading) => reading.syncStatus === 'sent').length;
+
+  const handleLogin = async () => {
+    setLoggingIn(true);
+    try {
+      if (await login(employeeCode, pin)) setPin('');
+    } finally {
+      setLoggingIn(false);
+    }
+  };
+
+  if (!ready) {
+    return (
+      <AppShell title="Preparando la jornada">
+        <BentoCard>
+          <Text style={typography.body}>Restaurando sesión y lecturas guardadas…</Text>
+        </BentoCard>
+      </AppShell>
+    );
+  }
+
+  if (!session) {
+    return (
+      <AppShell title="Acceso de técnico">
+        <BentoCard style={styles.loginCard}>
+          <Text style={styles.overline}>ACCESO DE CAMPO</Text>
+          <Text style={typography.heading}>Bienvenido de vuelta</Text>
+          <Text style={typography.body}>
+            Inicia sesión una vez. Tu sesión se conserva en este dispositivo hasta que cierres
+            sesión.
+          </Text>
+          <View style={styles.fieldGroup}>
+            <Text style={typography.label}>Código de empleado</Text>
+            <Field
+              autoCapitalize="characters"
+              autoCorrect={false}
+              onChangeText={setEmployeeCode}
+              placeholder="DEMO-001"
+              returnKeyType="next"
+              value={employeeCode}
+            />
+          </View>
+          <View style={styles.fieldGroup}>
+            <Text style={typography.label}>PIN</Text>
+            <Field
+              keyboardType="number-pad"
+              onChangeText={setPin}
+              onSubmitEditing={() => void handleLogin()}
+              placeholder="••••"
+              secureTextEntry
+              value={pin}
+            />
+          </View>
+          <PrimaryButton
+            disabled={loggingIn || !employeeCode.trim() || !pin}
+            label={loggingIn ? 'Verificando…' : 'Iniciar sesión'}
+            onPress={() => void handleLogin()}
+          />
+          <Text style={typography.caption}>
+            Credenciales públicas de práctica: código DEMO-001 · PIN 1234. No usar en producción.
+          </Text>
+        </BentoCard>
+      </AppShell>
+    );
+  }
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <AppShell title="Panel de jornada">
+      <BentoCard style={styles.hero}>
+        <Text style={styles.overline}>TURNO ACTIVO</Text>
+        <Text style={styles.heroTitle}>Hola, técnico</Text>
+        <Text style={styles.heroBody}>
+          Busca el código del medidor para registrar una lectura. Los cambios se guardan aunque no
+          haya señal.
+        </Text>
+        <PrimaryButton label="Registrar lectura" onPress={() => router.push('/meter')} />
+      </BentoCard>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      <View style={styles.stats}>
+        <BentoCard style={styles.statCard}>
+          <Text style={styles.statNumber}>{pendingCount}</Text>
+          <Text style={typography.caption}>Pendientes de sincronizar</Text>
+        </BentoCard>
+        <BentoCard style={styles.statCard}>
+          <Text style={styles.statNumber}>{sentCount}</Text>
+          <Text style={typography.caption}>Enviadas este dispositivo</Text>
+        </BentoCard>
+      </View>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
+      {draft ? (
+        <BentoCard style={styles.resumeCard}>
+          <Text style={styles.overline}>BORRADOR RECUPERADO</Text>
+          <Text style={typography.subheading}>{draft.meterCode}</Text>
+          <Text style={typography.body}>Tu progreso se guardó automáticamente.</Text>
+          <PrimaryButton
+            label="Continuar borrador"
+            onPress={() => router.push({ pathname: '/reading', params: { code: draft.meterCode } })}
           />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+        </BentoCard>
+      ) : null}
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+      <BentoCard style={styles.actionCard}>
+        <Text style={typography.subheading}>Control de lecturas</Text>
+        <Text style={typography.body}>
+          Revisa registros pendientes, retoma borradores o verifica qué lecturas ya fueron enviadas.
+        </Text>
+        <PrimaryButton label="Ver lecturas" onPress={() => router.push('/records')} secondary />
+      </BentoCard>
+    </AppShell>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
+  loginCard: { gap: 16, padding: 22 },
+  fieldGroup: { gap: 5 },
+  overline: { color: '#117DBF', fontSize: 10, fontWeight: '900', letterSpacing: 1.3 },
+  hero: { backgroundColor: '#F2F2F2', borderColor: '#117DBF', gap: 13, padding: 22 },
+  heroTitle: { color: '#263973', fontSize: 28, fontWeight: '900' },
+  heroBody: { color: '#263973', fontSize: 15, lineHeight: 23, marginBottom: 4 },
+  stats: { flexDirection: 'row', gap: 12 },
+  statCard: { flex: 1, minHeight: 115, justifyContent: 'center', gap: 6 },
+  statNumber: { color: '#117DBF', fontSize: 34, fontWeight: '900' },
+  resumeCard: { backgroundColor: '#F2F2F2', borderColor: '#D9B64E', gap: 10 },
+  actionCard: { gap: 12 },
 });

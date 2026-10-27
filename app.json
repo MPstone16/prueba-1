@@ -11,8 +11,9 @@
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "blockedPermissions": ["android.permission.RECORD_AUDIO"],
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#F2F2F2",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -26,9 +27,17 @@
     "plugins": [
       "expo-router",
       [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Se requiere acceso a la cámara para respaldar lecturas y medidores dañados.",
+          "photosPermission": "Se requiere acceso a las fotos para adjuntar evidencia del medidor."
+        }
+      ],
+      "expo-secure-store",
+      [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#D92534",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
