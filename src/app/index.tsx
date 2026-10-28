@@ -4,11 +4,15 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { AppShell } from '@/components/app-shell';
 import { BentoCard } from '@/components/bento-card';
-import { Field, PrimaryButton, typography } from '@/components/form-controls';
+import { Field, PrimaryButton, useTypography } from '@/components/form-controls';
 import { useApp } from '@/context/app-context';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function HomeScreen() {
   const { session, readings, draft, login, ready } = useApp();
+  const typography = useTypography();
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const [employeeCode, setEmployeeCode] = useState('');
   const [pin, setPin] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
@@ -125,16 +129,16 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useTheme>) => StyleSheet.create({
   loginCard: { gap: 16, padding: 22 },
   fieldGroup: { gap: 5 },
   overline: { color: '#117DBF', fontSize: 10, fontWeight: '900', letterSpacing: 1.3 },
-  hero: { backgroundColor: '#F2F2F2', borderColor: '#117DBF', gap: 13, padding: 22 },
-  heroTitle: { color: '#263973', fontSize: 28, fontWeight: '900' },
-  heroBody: { color: '#263973', fontSize: 15, lineHeight: 23, marginBottom: 4 },
+  hero: { backgroundColor: theme.background, borderColor: '#117DBF', gap: 13, padding: 22 },
+  heroTitle: { color: theme.text, fontSize: 28, fontWeight: '900' },
+  heroBody: { color: theme.text, fontSize: 15, lineHeight: 23, marginBottom: 4 },
   stats: { flexDirection: 'row', gap: 12 },
   statCard: { flex: 1, minHeight: 115, justifyContent: 'center', gap: 6 },
   statNumber: { color: '#117DBF', fontSize: 34, fontWeight: '900' },
-  resumeCard: { backgroundColor: '#F2F2F2', borderColor: '#D9B64E', gap: 10 },
+  resumeCard: { backgroundColor: theme.background, borderColor: '#D9B64E', gap: 10 },
   actionCard: { gap: 12 },
 });

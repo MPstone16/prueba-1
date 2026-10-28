@@ -3,8 +3,9 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { AppShell } from '@/components/app-shell';
 import { BentoCard } from '@/components/bento-card';
-import { PrimaryButton, typography } from '@/components/form-controls';
+import { PrimaryButton, useTypography } from '@/components/form-controls';
 import { useApp } from '@/context/app-context';
+import { useTheme } from '@/hooks/use-theme';
 import type { Reading } from '@/types/domain';
 import { formatDate } from '@/utils/reading';
 
@@ -18,6 +19,9 @@ function description(reading: Reading): string {
 
 export default function RecordsScreen() {
   const { readings, draft } = useApp();
+  const typography = useTypography();
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const sorted = [...readings].sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
 
   return (
@@ -83,8 +87,8 @@ export default function RecordsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  draftCard: { backgroundColor: '#F2F2F2', borderColor: '#D9B64E', gap: 10 },
+const createStyles = (theme: ReturnType<typeof useTheme>) => StyleSheet.create({
+  draftCard: { backgroundColor: theme.background, borderColor: '#D9B64E', gap: 10 },
   recordCard: { gap: 11 },
   recordHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   recordTitle: { gap: 3 },
@@ -92,6 +96,6 @@ const styles = StyleSheet.create({
   statusPending: { color: '#A56A16', fontSize: 10, fontWeight: '900', letterSpacing: 0.6 },
   photoLink: { color: '#16885F', fontSize: 12, fontWeight: '700' },
   photoLocal: { color: '#A56A16', fontSize: 12, fontWeight: '700' },
-  lockText: { color: '#263973', fontSize: 12 },
+  lockText: { color: theme.text, fontSize: 12 },
   empty: { gap: 12 },
 });

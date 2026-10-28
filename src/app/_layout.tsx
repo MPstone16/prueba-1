@@ -2,11 +2,22 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 import { AppProvider, useApp } from '@/context/app-context';
+import { ThemeProvider, useAppTheme } from '@/context/theme-context';
 
 export default function RootLayout() {
   return (
+    <ThemeProvider>
+      <ThemedApp />
+    </ThemeProvider>
+  );
+}
+
+function ThemedApp() {
+  const { mode } = useAppTheme();
+
+  return (
     <AppProvider>
-      <StatusBar style="dark" />
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       <AppRoutes />
     </AppProvider>
   );

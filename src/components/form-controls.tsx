@@ -1,5 +1,7 @@
 import { Pressable, StyleSheet, Text, TextInput, type TextInputProps } from 'react-native';
 
+import { useTheme } from '@/hooks/use-theme';
+
 export function PrimaryButton({
   label,
   onPress,
@@ -11,6 +13,8 @@ export function PrimaryButton({
   disabled?: boolean;
   secondary?: boolean;
 }) {
+  const theme = useTheme();
+  const styles = createStyles(theme);
   return (
     <Pressable
       accessibilityRole="button"
@@ -28,25 +32,30 @@ export function PrimaryButton({
 }
 
 export function Field(props: TextInputProps) {
+  const theme = useTheme();
+  const styles = createStyles(theme);
   return (
     <TextInput
-      placeholderTextColor="#263973"
-      selectionColor="#117DBF"
+      placeholderTextColor={theme.textSecondary}
+      selectionColor={theme.backgroundSelected}
       {...props}
       style={[styles.input, props.multiline && styles.multiline, props.style]}
     />
   );
 }
 
-export const typography = StyleSheet.create({
-  heading: { color: '#263973', fontSize: 20, fontWeight: '800' },
-  subheading: { color: '#263973', fontSize: 15, fontWeight: '700' },
-  body: { color: '#263973', fontSize: 14, lineHeight: 21 },
-  label: { color: '#263973', fontSize: 12, fontWeight: '800', marginBottom: 7 },
-  caption: { color: '#263973', fontSize: 12, lineHeight: 18 },
-});
+export function useTypography() {
+  const theme = useTheme();
+  return StyleSheet.create({
+    heading: { color: theme.text, fontSize: 20, fontWeight: '800' },
+    subheading: { color: theme.text, fontSize: 15, fontWeight: '700' },
+    body: { color: theme.text, fontSize: 14, lineHeight: 21 },
+    label: { color: theme.text, fontSize: 12, fontWeight: '800', marginBottom: 7 },
+    caption: { color: theme.textSecondary, fontSize: 12, lineHeight: 18 },
+  });
+}
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useTheme>) => StyleSheet.create({
   button: {
     backgroundColor: '#D92534',
     borderRadius: 15,
@@ -57,16 +66,16 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   buttonText: { color: '#F2F2F2', fontSize: 14, fontWeight: '800', textAlign: 'center' },
-  secondary: { backgroundColor: '#F2F2F2', borderColor: '#117DBF', borderWidth: 1 },
-  secondaryText: { color: '#263973' },
+  secondary: { backgroundColor: theme.background, borderColor: '#117DBF', borderWidth: 1 },
+  secondaryText: { color: theme.text },
   disabled: { opacity: 0.45 },
   pressed: { opacity: 0.82, transform: [{ scale: 0.99 }] },
   input: {
-    backgroundColor: '#F2F2F2',
+    backgroundColor: theme.background,
     borderColor: '#117DBF',
     borderRadius: 14,
     borderWidth: 1,
-    color: '#263973',
+    color: theme.text,
     fontSize: 15,
     minHeight: 48,
     paddingHorizontal: 14,

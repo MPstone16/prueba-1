@@ -12,8 +12,9 @@ import {
 
 import { AppShell } from '@/components/app-shell';
 import { BentoCard } from '@/components/bento-card';
-import { Field, PrimaryButton, typography } from '@/components/form-controls';
+import { Field, PrimaryButton, useTypography } from '@/components/form-controls';
 import { useApp } from '@/context/app-context';
+import { useTheme } from '@/hooks/use-theme';
 import { persistPhoto } from '@/services/photo-storage';
 import { emptyDraft, type MeterCondition, type ReadingDraft } from '@/types/domain';
 import { currentMonthKey } from '@/utils/reading';
@@ -27,6 +28,9 @@ const conditions: { value: MeterCondition; label: string; detail: string }[] = [
 export default function ReadingScreen() {
   const { code = '', readingId } = useLocalSearchParams<{ code: string; readingId?: string }>();
   const { meters, readings, draft, ready, saveDraft, discardDraft, submitReading } = useApp();
+  const typography = useTypography();
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const [form, setForm] = useState<ReadingDraft>(() => emptyDraft(code));
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -399,19 +403,19 @@ export default function ReadingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  meterCard: { backgroundColor: '#F2F2F2', borderColor: '#117DBF', gap: 8 },
+const createStyles = (theme: ReturnType<typeof useTheme>) => StyleSheet.create({
+  meterCard: { backgroundColor: theme.background, borderColor: '#117DBF', gap: 8 },
   overline: { color: '#117DBF', fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
   meterStats: { flexDirection: 'row', gap: 10, marginTop: 10 },
-  meterStat: { backgroundColor: '#FFFFFFA8', borderRadius: 14, flex: 1, padding: 12, gap: 3 },
+  meterStat: { backgroundColor: theme.backgroundElement, borderRadius: 14, flex: 1, padding: 12, gap: 3 },
   metricNumber: { color: '#117DBF', fontSize: 24, fontWeight: '900' },
   card: { gap: 16 },
   stepHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   section: { gap: 14 },
   conditions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   condition: {
-    backgroundColor: '#F2F2F2',
-    borderColor: '#F2F2F2',
+    backgroundColor: theme.background,
+    borderColor: theme.background,
     borderRadius: 14,
     borderWidth: 1,
     flexGrow: 1,
@@ -420,7 +424,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   conditionSelected: { backgroundColor: '#D9B64E', borderColor: '#117DBF', borderWidth: 2 },
-  conditionLabel: { color: '#263973', fontSize: 13, fontWeight: '800' },
+  conditionLabel: { color: theme.text, fontSize: 13, fontWeight: '800' },
   fieldGroup: { gap: 4 },
   warning: { backgroundColor: '#FFF2D6', borderColor: '#F0D799', borderRadius: 15, borderWidth: 1, padding: 14, gap: 7 },
   warningTitle: { color: '#8C5D00', fontSize: 14, fontWeight: '900' },
@@ -440,10 +444,10 @@ const styles = StyleSheet.create({
     width: 22,
   },
   confirmText: { color: '#624914', flex: 1, fontSize: 13, fontWeight: '700' },
-  info: { backgroundColor: '#F2F2F2', borderRadius: 14, padding: 13 },
+  info: { backgroundColor: theme.background, borderRadius: 14, padding: 13 },
   photoSection: {
-    backgroundColor: '#F9FAFC',
-    borderColor: '#D9E3ED',
+    backgroundColor: theme.backgroundElement,
+    borderColor: theme.textSecondary,
     borderRadius: 15,
     borderWidth: 1,
     gap: 10,
@@ -451,13 +455,13 @@ const styles = StyleSheet.create({
   },
   photoSectionRequired: { backgroundColor: '#FFF0EC', borderColor: '#D92534' },
   photoHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
-  photoLabel: { color: '#263973', fontSize: 13, fontWeight: '800' },
-  photoBadge: { backgroundColor: '#E7EFF4', borderRadius: 999, color: '#263973', fontSize: 11, fontWeight: '800', overflow: 'hidden', paddingHorizontal: 8, paddingVertical: 4 },
+  photoLabel: { color: theme.text, fontSize: 13, fontWeight: '800' },
+  photoBadge: { backgroundColor: theme.backgroundSelected, borderRadius: 999, color: theme.text, fontSize: 11, fontWeight: '800', overflow: 'hidden', paddingHorizontal: 8, paddingVertical: 4 },
   photoBadgeRequired: { backgroundColor: '#F2D5D5', color: '#9E3C2A' },
   photo: { alignSelf: 'center', borderRadius: 15, height: 220, width: '100%' },
-  reviewLine: { alignItems: 'center', borderBottomColor: '#F2F2F2', borderBottomWidth: 1, flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
-  reviewLabel: { color: '#263973', fontSize: 13 },
-  reviewValue: { color: '#263973', fontSize: 14, fontWeight: '800' },
+  reviewLine: { alignItems: 'center', borderBottomColor: theme.textSecondary, borderBottomWidth: 1, flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
+  reviewLabel: { color: theme.text, fontSize: 13 },
+  reviewValue: { color: theme.text, fontSize: 14, fontWeight: '800' },
   error: { backgroundColor: '#FFF0EC', borderRadius: 12, color: '#9E3C2A', fontSize: 13, lineHeight: 19, padding: 12 },
   actions: { flexDirection: 'row', gap: 10 },
   discard: { alignSelf: 'center', padding: 8 },

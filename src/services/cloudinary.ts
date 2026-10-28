@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { isAxiosError } from 'axios';
 
 import { CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from '@/constants/config';
 
@@ -18,11 +18,20 @@ export async function uploadPhoto(uri: string): Promise<string> {
   );
   form.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
-  const response = await axios.post<CloudinaryResponse>(
-    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-    form,
-    { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 30000 },
-  );
+  let response;
+  try {
+    response = await axios.post<CloudinaryResponse>(
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+      form,
+      { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 30000 },
+    );
+  } catch (error: unknown) {
+    if (isAxiosError<{ error?: { message?: string } }>(error)) {
+      const detail = error.response?.data?.error?.message;
+      if (detail) throw new Error(`Cloudinary rechazó la fotografía: ${detail}`);
+    }
+    throw error;
+  }
   if (!response.data.secure_url) {
     throw new Error('Cloudinary no devolvió la URL segura de la fotografía.');
   }

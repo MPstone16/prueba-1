@@ -4,12 +4,16 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { AppShell } from '@/components/app-shell';
 import { BentoCard } from '@/components/bento-card';
-import { Field, PrimaryButton, typography } from '@/components/form-controls';
+import { Field, PrimaryButton, useTypography } from '@/components/form-controls';
 import { useApp } from '@/context/app-context';
+import { useTheme } from '@/hooks/use-theme';
 import { currentMonthKey, isValidMeterCode } from '@/utils/reading';
 
 export default function MeterScreen() {
   const { readings, draft, online, lookupMeter } = useApp();
+  const typography = useTypography();
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [searching, setSearching] = useState(false);
@@ -102,11 +106,11 @@ export default function MeterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useTheme>) => StyleSheet.create({
   card: { gap: 14, padding: 22 },
   icon: {
     alignSelf: 'flex-start',
-    backgroundColor: '#F2F2F2',
+    backgroundColor: theme.background,
     borderRadius: 12,
     color: '#117DBF',
     fontSize: 13,
@@ -124,5 +128,5 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     padding: 12,
   },
-  helpCard: { backgroundColor: '#F2F2F2', borderColor: '#117DBF', gap: 9 },
+  helpCard: { backgroundColor: theme.background, borderColor: '#117DBF', gap: 9 },
 });

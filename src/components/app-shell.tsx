@@ -4,9 +4,12 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useApp } from '@/context/app-context';
+import { useAppTheme } from '@/context/theme-context';
 
 export function AppShell({ title, children }: PropsWithChildren<{ title: string }>) {
   const { session, online, pendingCount, notice, clearNotice, logout } = useApp();
+  const { mode, colors, toggleTheme } = useAppTheme();
+  const styles = createStyles(colors);
 
   const handleLogout = async () => {
     await logout();
@@ -21,9 +24,18 @@ export function AppShell({ title, children }: PropsWithChildren<{ title: string 
             <Text style={styles.eyebrow}>EPMAPS · OPERACIÓN DE CAMPO</Text>
             <Text style={styles.title}>{title}</Text>
           </View>
-          <View style={[styles.connection, online ? styles.connected : styles.disconnected]}>
-            <View style={[styles.dot, online ? styles.green : styles.red]} />
-            <Text style={styles.connectionText}>{online ? 'En línea' : 'Sin conexión'}</Text>
+          <View style={styles.headerActions}>
+            <View style={[styles.connection, online ? styles.connected : styles.disconnected]}>
+              <View style={[styles.dot, online ? styles.green : styles.red]} />
+              <Text style={styles.connectionText}>{online ? 'En línea' : 'Sin conexión'}</Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={mode === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
+              onPress={toggleTheme}
+              style={styles.themeButton}>
+              <Text style={styles.themeText}>{mode === 'dark' ? '☀' : '☾'}</Text>
+            </Pressable>
           </View>
         </View>
 
@@ -57,8 +69,9 @@ export function AppShell({ title, children }: PropsWithChildren<{ title: string 
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F2F2F2' },
+const createStyles = (colors: (typeof import('@/constants/theme').Colors)[keyof typeof import('@/constants/theme').Colors]) =>
+  StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: colors.background },
   content: {
     width: '100%',
     maxWidth: 820,
@@ -70,8 +83,20 @@ const styles = StyleSheet.create({
   },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   brand: { flex: 1 },
-  eyebrow: { color: '#263973', fontSize: 10, fontWeight: '800', letterSpacing: 1.2 },
-  title: { color: '#263973', fontSize: 25, fontWeight: '800', marginTop: 5 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  themeButton: {
+    alignItems: 'center',
+    backgroundColor: colors.backgroundElement,
+    borderColor: colors.textSecondary,
+    borderRadius: 18,
+    borderWidth: 1,
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
+  },
+  themeText: { color: colors.text, fontSize: 18, fontWeight: '800' },
+  eyebrow: { color: colors.text, fontSize: 10, fontWeight: '800', letterSpacing: 1.2 },
+  title: { color: colors.text, fontSize: 25, fontWeight: '800', marginTop: 5 },
   connection: {
     borderRadius: 20,
     paddingHorizontal: 11,
@@ -85,10 +110,10 @@ const styles = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 5 },
   green: { backgroundColor: '#16885E' },
   red: { backgroundColor: '#E07845' },
-  connectionText: { color: '#263973', fontSize: 11, fontWeight: '700' },
+  connectionText: { color: colors.text, fontSize: 11, fontWeight: '700' },
   nav: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
-  navButton: { backgroundColor: '#E7EFF4', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 9 },
-  navText: { color: '#263973', fontWeight: '700', fontSize: 12 },
+  navButton: { backgroundColor: colors.backgroundElement, borderColor: colors.textSecondary, borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 9 },
+  navText: { color: colors.text, fontWeight: '700', fontSize: 12 },
   logoutText: { color: '#D92534', fontWeight: '700', fontSize: 12 },
   pendingPill: { backgroundColor: '#D9B64E', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 9 },
   pendingText: { color: '#263973', fontWeight: '800', fontSize: 12 },
@@ -102,5 +127,5 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   body: { gap: 14 },
-  footer: { color: '#263973', fontSize: 11, textAlign: 'center', marginTop: 8 },
+  footer: { color: colors.textSecondary, fontSize: 11, textAlign: 'center', marginTop: 8 },
 });
