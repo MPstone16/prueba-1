@@ -302,21 +302,27 @@ export default function ReadingScreen() {
                 </Text>
               </View>
             ) : null}
-            {photoRequired ? (
-              <View style={styles.photoSection}>
-                <PrimaryButton
-                  label={form.photoUri ? 'Tomar otra fotografía' : 'Tomar fotografía'}
-                  onPress={() => void pickPhoto()}
-                />
-                {form.photoUri ? (
-                  <Image source={{ uri: form.photoUri }} resizeMode="cover" style={styles.photo} />
-                ) : (
-                  <Text style={typography.caption}>
-                    La foto se conserva localmente y se subirá a Cloudinary al recuperar la conexión.
-                  </Text>
-                )}
+            <View style={[styles.photoSection, photoRequired && styles.photoSectionRequired]}>
+              <View style={styles.photoHeader}>
+                <Text style={styles.photoLabel}>Evidencia fotográfica</Text>
+                <Text style={[styles.photoBadge, photoRequired && styles.photoBadgeRequired]}>
+                  {photoRequired ? 'Obligatoria' : 'Opcional'}
+                </Text>
               </View>
-            ) : null}
+              <PrimaryButton
+                label={form.photoUri ? 'Tomar otra fotografía' : 'Tomar fotografía'}
+                onPress={() => void pickPhoto()}
+              />
+              {form.photoUri ? (
+                <Image source={{ uri: form.photoUri }} resizeMode="cover" style={styles.photo} />
+              ) : (
+                <Text style={typography.caption}>
+                  {photoRequired
+                    ? 'La fotografía es obligatoria para este caso y se adjuntará a la lectura.'
+                    : 'La foto se conserva localmente y se subirá a Cloudinary al recuperar la conexión.'}
+                </Text>
+              )}
+            </View>
           </View>
         ) : null}
 
@@ -435,7 +441,19 @@ const styles = StyleSheet.create({
   },
   confirmText: { color: '#624914', flex: 1, fontSize: 13, fontWeight: '700' },
   info: { backgroundColor: '#F2F2F2', borderRadius: 14, padding: 13 },
-  photoSection: { gap: 10 },
+  photoSection: {
+    backgroundColor: '#F9FAFC',
+    borderColor: '#D9E3ED',
+    borderRadius: 15,
+    borderWidth: 1,
+    gap: 10,
+    padding: 14,
+  },
+  photoSectionRequired: { backgroundColor: '#FFF0EC', borderColor: '#D92534' },
+  photoHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
+  photoLabel: { color: '#263973', fontSize: 13, fontWeight: '800' },
+  photoBadge: { backgroundColor: '#E7EFF4', borderRadius: 999, color: '#263973', fontSize: 11, fontWeight: '800', overflow: 'hidden', paddingHorizontal: 8, paddingVertical: 4 },
+  photoBadgeRequired: { backgroundColor: '#F2D5D5', color: '#9E3C2A' },
   photo: { alignSelf: 'center', borderRadius: 15, height: 220, width: '100%' },
   reviewLine: { alignItems: 'center', borderBottomColor: '#F2F2F2', borderBottomWidth: 1, flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
   reviewLabel: { color: '#263973', fontSize: 13 },

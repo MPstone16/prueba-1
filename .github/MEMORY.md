@@ -46,3 +46,11 @@
 
 ## Remaining
 - Generate and verify a native APK when an Android build environment is available.
+
+## Verification run — 2026-10-27
+- `npm install` — completed; npm reported 6 dependency advisories (3 moderate, 3 high) and one install script awaiting approval.
+- `npx expo-doctor` — 21/21 checks passed.
+- `npx tsc --noEmit` initially found the unused Explore tab pointing to a route that no longer exists. Removed that stale tab from both platform variants in `src/components/app-tabs.tsx` and `src/components/app-tabs.web.tsx`; rationale: keep navigation consistent with the implemented routes and restore TypeScript validation.
+- `npm run lint` — still fails only on the existing `react-hooks/set-state-in-effect` issue in `src/hooks/use-color-scheme.web.ts`; focused lint on implementation files passed.
+- `npx expo config --type public`, Android and web exports, read-only MockAPI GET checks, and `git diff --check` — passed. MockAPI returned 5 compatible `MEDIDOR` records and 0 `LECTURA` records; no remote data was changed.
+- Native APK build and device checks remain blocked: no Android SDK/ADB device, no `eas.json`, and no approved `android.package` identifier.

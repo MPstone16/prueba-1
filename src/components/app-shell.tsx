@@ -44,7 +44,7 @@ export function AppShell({ title, children }: PropsWithChildren<{ title: string 
           </View>
         ) : null}
 
-        {notice ? (
+        {session && notice ? (
           <Pressable onPress={clearNotice} accessibilityRole="alert">
             <Text style={styles.notice}>{notice}  ·  Toca para cerrar</Text>
           </Pressable>

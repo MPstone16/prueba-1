@@ -52,6 +52,15 @@ function isOnline(network: Network.NetworkState): boolean {
   return network.isConnected === true && network.isInternetReachable !== false;
 }
 
+async function isServerReachable(): Promise<boolean> {
+  try {
+    await fetchMeters();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function mergeReadings(local: Reading[], remote: Reading[]): Reading[] {
   const merged = new Map<string, Reading>();
   for (const reading of local) {
@@ -116,7 +125,7 @@ export function AppProvider({ children }: PropsWithChildren) {
 
   const syncQueue = useCallback(
     async (queue: Reading[]) => {
-      if (!online) return;
+      if (!online || !session) return;
       const failures: string[] = [];
       let remote: Reading[];
       try {
@@ -181,11 +190,11 @@ export function AppProvider({ children }: PropsWithChildren) {
           : 'Sincronización completada.',
       );
     },
-    [online, persistReadings],
+    [online, persistReadings, session],
   );
 
   const refreshRemoteData = useCallback(async () => {
-    if (!online) return;
+    if (!online || !session) return;
     try {
       const [remoteMeters, remoteReadings] = await Promise.all([fetchMeters(), fetchReadings()]);
       setMeters(remoteMeters);
@@ -197,7 +206,7 @@ export function AppProvider({ children }: PropsWithChildren) {
       const detail = error instanceof Error ? error.message : 'Error desconocido';
       setNotice(`No se pudo actualizar la información del servidor: ${detail}`);
     }
-  }, [online, persistReadings, syncQueue]);
+  }, [online, persistReadings, session, syncQueue]);
 
   useEffect(() => {
     let active = true;
@@ -216,7 +225,7 @@ export function AppProvider({ children }: PropsWithChildren) {
         readingsRef.current = savedReadings;
         setReadings(savedReadings);
         setDraft(savedDraft);
-        setOnline(isOnline(network));
+        setOnline(isOnline(network) && (await isServerReachable()));
       } catch (error) {
         const detail = error instanceof Error ? error.message : 'Error desconocido';
         setNotice(`No se pudieron restaurar los datos guardados: ${detail}`);
@@ -226,13 +235,15 @@ export function AppProvider({ children }: PropsWithChildren) {
     };
     void initialize();
 
-    const networkSubscription = Network.addNetworkStateListener((state) => {
-      setOnline(isOnline(state));
+    const networkSubscription = Network.addNetworkStateListener(async (state) => {
+      setOnline(isOnline(state) && (await isServerReachable()));
     });
     const appStateSubscription = AppState.addEventListener('change', (state: AppStateStatus) => {
       if (state === 'active') {
         void Network.getNetworkStateAsync()
-          .then((state) => setOnline(isOnline(state)))
+          .then(async (state) => {
+            setOnline(isOnline(state) && (await isServerReachable()));
+          })
           .catch((error: unknown) => {
             const detail = error instanceof Error ? error.message : 'Error desconocido';
             setNotice(`No se pudo comprobar la conexión: ${detail}`);
@@ -248,10 +259,10 @@ export function AppProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
-    if (!ready || !online) return;
+    if (!ready || !online || !session) return;
     const timer = setTimeout(() => void refreshRemoteData(), 0);
     return () => clearTimeout(timer);
-  }, [online, ready, refreshRemoteData]);
+  }, [online, ready, refreshRemoteData, session]);
 
   const login = useCallback(async (employeeCode: string, pin: string) => {
     if (employeeCode.trim() !== DEMO_EMPLOYEE_CODE || pin !== DEMO_EMPLOYEE_PIN) {
@@ -305,6 +316,7 @@ export function AppProvider({ children }: PropsWithChildren) {
 
   const lookupMeter = useCallback(
     async (code: string) => {
+      if (!session) return null;
       const cached = meters.find((meter) => meter.code === code);
       if (cached || !online) return cached ?? null;
       try {
@@ -318,11 +330,15 @@ export function AppProvider({ children }: PropsWithChildren) {
         throw error;
       }
     },
-    [meters, online],
+    [meters, online, session],
   );
 
   const submitReading = useCallback(
     async (submission: ReadingSubmission, editingId?: string) => {
+      if (!session) {
+        setNotice('Debes iniciar sesión antes de guardar lecturas.');
+        return false;
+      }
       const meter = meters.find((item) => item.code === submission.meterCode);
       if (!meter) {
         setNotice('No se puede guardar: el medidor no está disponible en la caché.');
@@ -401,7 +417,7 @@ export function AppProvider({ children }: PropsWithChildren) {
       if (online) await syncQueue(next);
       return true;
     },
-    [meters, online, persistDraft, persistReadings, syncQueue],
+    [meters, online, persistDraft, persistReadings, session, syncQueue],
   );
 
   const value = useMemo<AppContextValue>(

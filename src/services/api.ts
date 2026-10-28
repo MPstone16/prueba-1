@@ -10,7 +10,11 @@ import type { Meter, Reading } from '@/types/domain';
 const http = create({
   baseURL: API_BASE_URL,
   timeout: 12000,
-  headers: { Accept: 'application/json' },
+  headers: {
+    Accept: 'application/json; charset=utf-8',
+    'Accept-Charset': 'utf-8',
+    'Content-Type': 'application/json; charset=utf-8',
+  },
 });
 
 const demoMeters: Omit<Meter, 'id'>[] = [
